@@ -1,0 +1,9 @@
+node:
+  in_pose_estimation_topic: "/carina/localization/pose"
+  in_detected_objects: "/carina/perception/dataset/obstacles_marker_array"
+  out_detected_objects: "/carina/perception/mot/lidar"
+
+sort:
+  max_age: 1          # Maximum number of frames to keep alive a track without associated detections.
+  min_hits: 2         # Minimum number of associated detections before track is initialised.
+  iou_threshold: 0.1  # Minimum IOU for match.
