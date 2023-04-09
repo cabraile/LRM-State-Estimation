@@ -2,6 +2,7 @@ node:
   in_pose_estimation_topic: "/carina/localization/pose"
   in_detected_objects: "/carina/perception/dataset/obstacles_marker_array"
   out_detected_objects: "/carina/perception/mot/lidar"
+  expected_lidar_frame_rate: 20.0 # Hz
 
 sort:
   max_age: 1          # Maximum number of frames to keep alive a track without associated detections.
