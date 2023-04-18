@@ -110,9 +110,9 @@ class KalmanBoxTracker(object):
 
     self.kf.P *= 10.
     self.kf.P[7:,7:] *= 1000. #give high uncertainty to the unobservable initial velocities
-    self.kf.R[7:,7:] *= 10. # Measurement uncertainty
+    self.kf.R[7:,7:] *= 1. # Measurement uncertainty
     self.kf.R[6,6] = 0.00001 # Set a very low value to the yaw uncertainty in order to avoid 'spinning' behaviour
-    self.kf.Q[7:,7:] *= 0.01 # Prediction uncertainty
+    self.kf.Q[7:,7:] *= 0.3 # Prediction uncertainty
 
     self.kf.x[:7] = bbox.reshape(-1,1)
     self.time_since_update = 0
@@ -162,7 +162,7 @@ class KalmanBoxTracker(object):
     """
     Returns the current bounding box estimate.
     """
-    return self.kf.x[:7].squeeze()
+    return self.kf.x.squeeze()
 
 def associate_detections_to_trackers(detections : np.ndarray, trackers : np.ndarray ,iou_threshold : float = 0.3) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
   """
@@ -235,8 +235,17 @@ class Sort(object):
     self.min_hits = min_hits
     self.iou_threshold = iou_threshold
     self.trackers = []
+    self.tracker_id_to_seq_idx_map = dict()
     self.frame_count = 0
     self.prediction_rate = prediction_rate
+
+  def refresh_indices(self) -> None:
+    """Refreshes the indices of the tracker ID to its index among the SORT trackers.
+    """
+    self.tracker_id_to_seq_idx_map = { tracker.id + 1 : idx for idx, tracker in enumerate(self.trackers) }
+
+  def get_tracker_by_id(self, tracker_id : int) -> KalmanBoxTracker:
+    return self.trackers[ self.tracker_id_to_seq_idx_map[tracker_id] ]
 
   def update(self, in_detections : np.ndarray) -> np.ndarray:
     """
@@ -291,7 +300,11 @@ class Sort(object):
         # remove dead tracklet
         if(trk.time_since_update > self.max_age):
           self.trackers.pop(i)
+    
+    self.refresh_indices()
+    
     if(len(ret)>0):
       return np.concatenate(ret)
-    return np.empty((0,7))
+    
+    return np.empty((0,8))
 

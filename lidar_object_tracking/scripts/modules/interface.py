@@ -3,6 +3,14 @@ from typing import Tuple
 from scipy.spatial.transform import Rotation
 from geometry_msgs.msg import Pose, TransformStamped
 
+def invert_transformation_matrix( T : np.ndarray ) -> np.ndarray:
+    R = T[:3,:3]
+    t = T[:3,3]
+    T_inv = np.eye(4)
+    T_inv[:3,:3] = R.T
+    T_inv[:3,3] = - R.T @ t
+    return T_inv
+
 def build_transformation_matrix( translation : Tuple[float], orientation_quaternion : Tuple[float] ) -> np.ndarray:
     """
     Arguments

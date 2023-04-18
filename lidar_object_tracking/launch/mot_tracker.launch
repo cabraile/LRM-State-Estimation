@@ -2,7 +2,7 @@
 
     <arg name="enable_visualization" default="true"/>
 
-    <node name="bag_player" pkg="rosbag" type="play" args="$(find lrm_lidar_object_tracking)/.data/2023-03-12-06-51-28.bag --clock --pause" output="screen"/>
+    <node name="bag_player" pkg="rosbag" type="play" args="$(find lrm_lidar_object_tracking)/.data/2023-03-12-06-51-28.bag --clock --pause --rate 1.0 --start 0" output="screen"/>
 
     <node name="lidar_mot_node" type="lidar_mot_node.py" pkg="lrm_lidar_object_tracking" output="screen"/>
 
