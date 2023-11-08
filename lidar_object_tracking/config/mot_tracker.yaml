@@ -1,12 +1,13 @@
 node:
   in_pose_estimation_topic: "/carina/localization/pose"
   lidar:
-    in_detected_objects: "/carina/perception/dataset/obstacles_marker_array"
-    out_detected_objects_markers: "/carina/perception/mot/lidar/markers"
-    out_detected_objects_obstacles: "/carina/perception/mot/lidar/obstacles"
+    #in_detected_objects: "/carina/sensor/lidar/obst_3d_marker_array" 
+    #in_detected_objects: "/carina/perception/dataset/obstacles_marker_array"
+    #out_detected_objects_markers: "/carina/perception/mot/lidar/markers"
+    #out_detected_objects_obstacles: "/carina/perception/mot/lidar/obstacles"
     expected_frame_rate: 20.0 # Hz
 
 sort:
-  max_age: 3          # Maximum number of frames to keep alive a track without associated detections.
-  min_hits: 4         # Minimum number of associated detections before track is initialised.
-  iou_threshold: 0.1  # Minimum IOU for match.
+  max_age: 2 #3          # Maximum number of frames to keep alive a track without associated detections.
+  min_hits: 3 #4         # Minimum number of associated detections before track is initialised.
+  iou_threshold: 0.1 #0.5 #0.1  # Minimum IOU for match.

@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 
 from scipy.spatial.transform import Rotation
 
+from std_msgs.msg import Bool
 import rospy
 from geometry_msgs.msg import PoseWithCovarianceStamped
 from visualization_msgs.msg import MarkerArray, Marker
@@ -32,7 +33,9 @@ class MOTNode:
         self.load_settings()
         node_settings = self.settings_dict["node"]
         sort_settings = self.settings_dict["sort"]
-        prediction_rate = node_settings["lidar"]["expected_frame_rate"] # TODO: switch between sensors (max between the frame rates)
+        #prediction_rate = node_settings["lidar"]["expected_frame_rate"] # TODO: switch between sensors (max between the frame rates)
+        full_param_name = rospy.search_param("expected_frame_rate")
+        prediction_rate = rospy.get_param(full_param_name)
         self.mot = Sort(
             max_age         = sort_settings["max_age"], 
             min_hits        = sort_settings["min_hits"],
@@ -91,6 +94,18 @@ class MOTNode:
         detections_array = np.empty((0,8))
         if len(detection_bounding_boxes) > 0:
             detections_array = np.vstack(detection_bounding_boxes)
+
+        if detection_bounding_boxes == []: #error when list es empty
+            # Publish output
+            tracked_object_markers_msg = MarkerArray()
+            tracked_object_markers_msg.markers = []
+            self.pub_lidar_tracked_markers.publish(tracked_object_markers)
+
+            tracked_object_obstacles_msg = ObstacleArray()
+            # tracked_object_obstacles_msg.header = tracked_object_obstacles[-1].header       #error when list is empty
+            tracked_object_obstacles_msg.obstacle = []
+            self.pub_lidar_tracked_obstacles.publish(tracked_object_obstacles_msg)# always publishing 
+            return
         
         # Update the MOT
         tracked_objects_array = self.mot.update(detections_array)
@@ -122,8 +137,8 @@ class MOTNode:
             marker_msg.color.r = r
             marker_msg.color.g = g
             marker_msg.color.b = b
-            marker_msg.color.a = 1.0
-            marker_msg.lifetime = rospy.Duration(2)
+            marker_msg.color.a = 0.6
+            marker_msg.lifetime = rospy.Duration(0.35)
 
             # Store Marker
             tracked_object_markers.append(marker_msg)
@@ -157,9 +172,27 @@ class MOTNode:
         self.pub_lidar_tracked_markers.publish(tracked_object_markers)
 
         tracked_object_obstacles_msg = ObstacleArray()
-        tracked_object_obstacles_msg.header = tracked_object_obstacles[-1].header
+        # tracked_object_obstacles_msg.header = tracked_object_obstacles[-1].header       #error when list is empty
         tracked_object_obstacles_msg.obstacle = tracked_object_obstacles
         self.pub_lidar_tracked_obstacles.publish(tracked_object_obstacles_msg)
+
+    def shutdown_cb(self, msg):
+        if msg.data:
+            print ("Bye!")
+
+            self.mot=None
+            self.base_link_T_lidar = None
+            self.utm_T_base_link = None
+            self.utm_T_lidar = None
+            self.settings_dict= None
+
+            del self.sub_base_link_pose
+            del self.sub_lidar_detections 
+            del self.pub_lidar_tracked_markers 
+            del self.pub_lidar_tracked_obstacles 
+            del self.shutdown_sub
+            rospy.signal_shutdown("lidar mot node finished ...")
+
 
     def spin(self) -> None:
         self.wait_for_extrinsics()
@@ -168,9 +201,26 @@ class MOTNode:
         node_settings = self.settings_dict["node"]
         lidar_node_settings         = node_settings["lidar"]
         self.sub_base_link_pose     = rospy.Subscriber(node_settings["in_pose_estimation_topic"], PoseWithCovarianceStamped, self.callback_base_link_pose)
-        self.sub_lidar_detections   = rospy.Subscriber(lidar_node_settings["in_detected_objects"], MarkerArray, self.callback_detections)
-        self.pub_lidar_tracked_markers    = rospy.Publisher(lidar_node_settings["out_detected_objects_markers"], MarkerArray, queue_size=10)
-        self.pub_lidar_tracked_obstacles  = rospy.Publisher(lidar_node_settings["out_detected_objects_obstacles"], ObstacleArray, queue_size=10)
+
+
+        in_detected_objects_full_name = rospy.search_param("in_detected_objects")
+        in_detected_objects = rospy.get_param(in_detected_objects_full_name)
+        out_detected_objects_markers_full_name = rospy.search_param("out_detected_objects_markers")
+        out_detected_objects_markers = rospy.get_param(out_detected_objects_markers_full_name)
+        out_detected_objects_obstacles_full_name = rospy.search_param("out_detected_objects_obstacles")
+        out_detected_objects_obstacles = rospy.get_param(out_detected_objects_obstacles_full_name)
+
+        print(in_detected_objects, out_detected_objects_markers, out_detected_objects_obstacles)
+        # self.sub_lidar_detections   = rospy.Subscriber(lidar_node_settings["in_detected_objects"], MarkerArray, self.callback_detections)
+        # self.pub_lidar_tracked_markers    = rospy.Publisher(lidar_node_settings["out_detected_objects_markers"], MarkerArray, queue_size=10)
+        # self.pub_lidar_tracked_obstacles  = rospy.Publisher(lidar_node_settings["out_detected_objects_obstacles"], ObstacleArray, queue_size=10)
+        self.sub_lidar_detections   = rospy.Subscriber(in_detected_objects, MarkerArray, self.callback_detections)
+        self.pub_lidar_tracked_markers    = rospy.Publisher(out_detected_objects_markers, MarkerArray, queue_size=10)
+        self.pub_lidar_tracked_obstacles  = rospy.Publisher(out_detected_objects_obstacles, ObstacleArray, queue_size=10)
+                
+
+        self.shutdown_sub = rospy.Subscriber('/carina/vehicle/shutdown', Bool, self.shutdown_cb, queue_size=1)
+
         rospy.spin()
 
 if __name__ == '__main__':

@@ -1,0 +1,10 @@
+<!-- -->
+<launch>
+
+    <node name="lidar_mot_stereo_node" type="lidar_mot_node.py" pkg="lrm_lidar_object_tracking" >
+	<param name="in_detected_objects" value= "/carina/perception/stereo/obstacles_velo_marker" />
+	<param name="out_detected_objects_markers" value= "/carina/perception/mot/stereo/markers"/>
+	<param name="out_detected_objects_obstacles" value= "/carina/perception/mot/stereo/obstacles"/>    
+	<param name="expected_frame_rate" value= "20.0" /> 
+    </node>
+</launch>

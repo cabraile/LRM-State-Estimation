@@ -179,6 +179,10 @@ def associate_detections_to_trackers(detections : np.ndarray, trackers : np.ndar
     xc, yc, zc, size_x, size_y, size_z = detections[i,:6]
     detection_2D_corners = np.array(BoundingBox3D.from_center_and_size(xc,yc,zc, size_x, size_y, size_z).to_bounding_box_2D().get_corners())
     detections_2D_format.append(detection_2D_corners)
+
+  if detections_2D_format == []:# following lines need at least one array to concatenate
+    return
+    
   detections_2D_format = np.vstack(detections_2D_format)
     
   # Convert trackers to 2D bounding boxes

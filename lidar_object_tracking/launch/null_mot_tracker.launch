@@ -1,7 +1,7 @@
 <!-- -->
 <launch>
 
-    <node name="lidar_mot_node" type="lidar_mot_node.py" pkg="lrm_lidar_object_tracking" output="screen">
+    <node name="lidar_mot_node" type="lidar_mot_node.py" pkg="lrm_lidar_object_tracking" >
 	<param name="in_detected_objects" value= "/carina/sensor/lidar/obst_3d_marker_array" />
 	<!--param name="in_detected_objects" value= "/carina/perception/dataset/obstacles_marker_array" /-->
 	<param name="out_detected_objects_markers" value= "/carina/perception/mot/lidar/markers"/>
