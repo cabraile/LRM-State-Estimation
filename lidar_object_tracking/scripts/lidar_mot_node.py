@@ -99,7 +99,7 @@ class MOTNode:
             # Publish output
             tracked_object_markers_msg = MarkerArray()
             tracked_object_markers_msg.markers = []
-            self.pub_lidar_tracked_markers.publish(tracked_object_markers)
+            self.pub_lidar_tracked_markers.publish(tracked_object_markers_msg)
 
             tracked_object_obstacles_msg = ObstacleArray()
             # tracked_object_obstacles_msg.header = tracked_object_obstacles[-1].header       #error when list is empty
@@ -169,7 +169,7 @@ class MOTNode:
         # Publish output
         tracked_object_markers_msg = MarkerArray()
         tracked_object_markers_msg.markers = tracked_object_markers
-        self.pub_lidar_tracked_markers.publish(tracked_object_markers)
+        self.pub_lidar_tracked_markers.publish(tracked_object_markers_msg)
 
         tracked_object_obstacles_msg = ObstacleArray()
         # tracked_object_obstacles_msg.header = tracked_object_obstacles[-1].header       #error when list is empty
